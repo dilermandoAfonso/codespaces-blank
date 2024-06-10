@@ -18,6 +18,7 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
   }
 });
 
+//Rota para salvar um novo usuário
 router.post('/register', (req, res) =>{
   const { login, senha, email, tipo} = req.body   
   console.log(req.body)
@@ -41,6 +42,77 @@ router.get('/', function(req, res, next) {
       res.status(200).send(users)
     }
   })
+});
+
+/* GET pelo ID */
+router.get('/:id', function(req, res, next){
+  const { id } = req.params;
+  db.get('SELECT * FROM users WHERE id = ?', [id], (err,row) =>{
+    if (err) {
+      console.error('Usuário não encontrado', err);
+      return res.status(500).json({error: 'Usuário não encontrado'});
+    } 
+    if(!row) {
+      return res.status(404).json({error:'Usuário não encontrado'});
+    }
+    res.status(200).json(row);
+  });
+}); 
+
+//Put para atualizar usuário
+router.put('/:id', function(req, res, next) {
+  const { id } = req.params;
+  const { login, senha, email, tipo} = req.body   
+  db.run('UPDATE users SET login = ?, senha = ?, email = ?, tipo = ? WHERE id = ?', [login, senha, email, tipo, id], function (err) {
+    if (err) {
+      console.error('Erro ao atualizar usuário', err);
+      return res.status(500).json({error:'Erro ao atualizar usuário'});
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({error:'Usuário não encontrado'});
+    }
+    res.status(200).json({message:"Usuário finalizado com sucesso"});
+  });
+});
+
+//PATCH para atualizar uma parte do usuário
+router.patch('/:id', function(req, res, next){
+  const { id } = req.params;
+  const fields = req.body;
+  const keys = Object.keys(fields);
+  const values = Object.values(fields);
+
+  if (keys.length === 0) {
+    return res.status(400).json({error:'Nenhum campo fornecido para atualização'});
+  }
+
+  const setClause = keys.map((key) => `${key} = ?`).join(', ');
+
+  db.run(`UPDATE users SET ${setClause} WHERE id = ?`, [...values, id], function(err){
+    if (err) {
+      console.error('Erro ao atualizar o usuário parcialmente', err);
+      return res.status(500).json({error: 'Erro ao atualizar o usuário parcialmente'});
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({error: 'Usuário não encontrado'});
+    } 
+    res.status(200).json({message: "Usuário atualizao parcialmente com sucesso"});
+  });
+});
+
+//DELETE para deletar o usuário
+router.delete('/:id', function(req, res, next){
+  const { id } = req.params;
+  db.run('DELETE FROM users WHERE id = ?', [id], function(err){
+    if (err) {
+      console.error('Erro ao deletar o usuário', err)
+      return res.status(500).json({error:'Erro ao deletar usuário'});
+    } 
+    if (this.changes === 0) {
+      return res.status(404).json({error: 'Usuário não encontrado'});
+    }
+    res.status(200).json({message:"Usuário deletado com sucesso"});
+  });
 });
 
 module.exports = router;
