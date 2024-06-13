@@ -3,15 +3,15 @@
 </h1>
 
 <form id="userForm">
-    <input type="hidden" name="id" id="id">
+    <input required type="hidden" name="id" id="id">
     <label for="login">Login</label>
-    <input name="login" id="login" type="text"><br>
+    <input required name="login" id="login" type="text"><br>
     <label for="senha">Senha</label>
-    <input name="senha" id="senha" type="text"><br>
+    <input required name="senha" id="senha" type="text"><br>
     <label for="email">Email</label>
-    <input name="email" id="email" type="text"><br>
+    <input required name="email" id="email" type="text"><br>
     <label for="tipo">Tipo</label>
-    <input name="tipo" id="tipo" type="text">
+    <input required name="tipo" id="tipo" type="text">
     <button type="submit">Enviar</button>
     <button type="reset">Cancelar</button>
 </form>
@@ -44,7 +44,7 @@
                             <%}%>
                                 <td>
                                     <button onclick="editUser('<%=user.id%>')">Editar</button>
-                                    <button>Deletar</button>
+                                    <button onclick="deleteUser('<%=user.id%>')">Deletar</button>
                                 </td>
                     </tr>
                     <%}%>
@@ -52,43 +52,43 @@
         </table>
 
         <script>
+            
             const form = document.getElementById('userForm')
             form.addEventListener("submit", (event) => {
                 event.preventDefault()
+                const user = mountDataForm()
+                let id = user.id
+                let METHOD = id ? 'PUT' : 'POST';
+                let URL = id ? `/users/${id}` : '/users';
+                createOrUpdate(user, URL, METHOD)
+            })
 
-                const formData = new FormData(form)
-                const user = {}
-                formData.forEach((value, key) => {
-                    user[key] = value
-                })
-
+            // CRIAR OU ATUALIZAR USUÁRIO
+            function createOrUpdate(user, URL, METHOD) {
                 console.log(user)
 
-                fetch("/users", {
-                    method: "POST",
+                fetch(URL, {
+                    method: METHOD,
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(user)
                 })
-                    .then((res) => { return res.json() })
-                    .then((user) => { console.log('foi salvo', user) })
-                    .catch((error) => { document.getElementById('error').innerText = error })
-            })
+                    .then(async (res) => { return await checkError(res) })
+                    .then((user) => {
+                        form.reset()
+                        window.location.reload()
+                    })
+                    .catch((error) => { document.getElementById('error').innerText = error })  
+            }
 
+            // BUSCAR USUÁRIO A SER EDITADO PELO ID E CARREGAR NOS INPUTS DO FORM
             function editUser(id) {
-                console.log(id)
                 fetch("/users/" + id, {
                     method: "GET"
                 })
-                    .then(async (res) => {
-                        if (!res.ok) {
-                            const err = await res.json()
-                            throw err
-                        }
-                        return res.json()
-                    })
-                    .then((user) => { 
+                    .then(async (res) => { return await checkError(res) })
+                    .then((user) => {
                         console.log('retornou o usuário', user)
-                        for (let prop in user){
+                        for (let prop in user) {
                             const input = document.querySelector(`input[name="${prop}"]`);
                             input.value = user[prop]
                         }
@@ -97,7 +97,35 @@
 
             }
 
+            // DELETAR UM USUÁRIO PELO ID
             function deleteUser(id) {
-                console.log(id)
+                fetch("/users/" + id, {
+                    method: "DELETE"
+                })
+                    .then(async (res) => { return await checkError(res) })
+                    .then((user) => {
+                        window.location.reload()
+                    })
+                    .catch((error) => { document.getElementById('error').innerText = error })
             }
+
+            // CHECAR ERRO NA RESPOSTA DA REQUISIÇÃO
+            async function checkError(res) {
+                if (!res.ok) {
+                    const err = await res.json()
+                    throw err
+                }
+                return res.json()
+            }
+
+            // MONTAR DADOS DO FORMULÁRIO USANDO FORMDATA
+            function mountDataForm() {
+                const formData = new FormData(form)
+                const user = {}
+                formData.forEach((value, key) => {
+                    user[key] = value
+                })
+                return user
+            }
+
         </script>
