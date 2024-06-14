@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário com Materialize</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+</head>
+<body>
+
+<h1><%-title%></h1>
+
+<div class="container">
+    <form id="userForm" class="col s12">
+        <input required type="hidden" name="id" id="id">
+        
+        <div class="row">
+            <div class="input-field col s12">
+                <input required name="login" id="login" type="text">
+                <label for="login">Login</label>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="input-field col s12">
+                <input required name="senha" id="senha" type="password">
+                <label for="senha">Senha</label>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="input-field col s12">
+                <input required name="email" id="email" type="email">
+                <label for="email">Email</label>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="input-field col s12">
+                <select required name="tipo" id="tipo">
+                    <option value="" disabled selected>Escolha o tipo</option>
+                    <option value="professor">Professor</option>
+                    <option value="aluno">Aluno</option>
+                    <option value="administrador">Administrador</option>
+                </select>
+                <label for="tipo">Tipo</label>
+            </div>
+        </div>
+        
+        <div class="row">
+            <button type="submit" class="btn waves-effect waves-light">Enviar</button>
+            <button type="reset" class="btn waves-effect waves-light red">Cancelar</button>
+        </div>
+    </form>
+
+    <span id="error" class="red-text"></span>
+
+    <% if (error) { %>
+        <span class="red-text">
+            <%= error %>
+        </span>
+    <% } %>
+
+    <table class="highlight">
+        <thead>
+            <tr>
+                <% for (let col of cols) { %>
+                    <th><%= col %></th>
+                <% } %>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (let user of users) { %>
+                <tr>
+                    <% for (let prop in user) { %>
+                        <td><%= user[prop] %></td>
+                    <% } %>
+                    <td>
+                        <button class="btn-small" onclick="editUser('<%= user.id %>')">Editar</button>
+                        <button class="btn-small red" onclick="deleteUser('<%= user.id %>')">Deletar</button>
+                    </td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<!-- Materialize JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var elems = document.querySelectorAll('select');
+        var instances = M.FormSelect.init(elems);
+    });
+
+    const form = document.getElementById('userForm');
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const user = mountDataForm();
+        let id = user.id;
+        let METHOD = id ? 'PUT' : 'POST';
+        let URL = id ? `/users/${id}` : '/users';
+        createOrUpdate(user, URL, METHOD);
+    });
+
+    function createOrUpdate(user, URL, METHOD) {
+        console.log(user);
+
+        fetch(URL, {
+            method: METHOD,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user)
+        })
+        .then(async (res) => { return await checkError(res); })
+        .then((user) => {
+            form.reset();
+            window.location.reload();
+        })
+        .catch((error) => { document.getElementById('error').innerText = error.error; });
+    }
+
+    function editUser(id) {
+        fetch("/users/" + id, {
+            method: "GET"
+        })
+        .then(async (res) => { return await checkError(res); })
+        .then((user) => {
+            console.log('retornou o usuário', user);
+            for (let prop in user) {
+                const input = document.querySelector(`[name="${prop}"]`);
+                if (input) {
+                    input.value = user[prop];
+                }
+            }
+            M.updateTextFields();  // Atualizar labels para Materialize
+
+            // Atualizar o valor do select
+            const tipoSelect = document.querySelector('select[name="tipo"]');
+            tipoSelect.value = user.tipo;
+            M.FormSelect.init(tipoSelect);
+        })
+        .catch((error) => { document.getElementById('error').innerText = error; });
+    }
+
+    function deleteUser(id) {
+        fetch("/users/" + id, {
+            method: "DELETE"
+        })
+        .then(async (res) => { return await checkError(res); })
+        .then((user) => {
+            window.location.reload();
+        })
+        .catch((error) => { document.getElementById('error').innerText = error; });
+    }
+
+    async function checkError(res) {
+        if (!res.ok) {
+            const err = await res.json();
+            throw err;
+        }
+        return res.json();
+    }
+
+    function mountDataForm() {
+        const formData = new FormData(form);
+        const user = {};
+        formData.forEach((value, key) => {
+            user[key] = value;
+        });
+        return user;
+    }
+</script>
+
+</body>
+</html>

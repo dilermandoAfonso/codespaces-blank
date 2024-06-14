@@ -16,11 +16,11 @@ router.get('/', function(req, res, next) {
   .then((users) => {
     let title = "Gestão de Usuários"
     let cols = ["Id","Login", "Senha", "Email", "Tipo", "Ações"]
-    res.render('users', {title, users, cols, error:""});
+    res.render('layout', {body: 'pages/users', title, users, cols, error:""});
   })
   .catch((error) => {
     console.log(error)
-    res.render('users', {title: "Gestão de Usuários", error });
+    res.render('layout', {body: 'pages/users', title: "Gestão de Usuários", error });
   })
 });
 
