@@ -1,0 +1,28 @@
+Quando você criar um objeto na routes do back,
+assim como o users.js. Você precisa adicionar 
+próximo ao var do sqlite3:
+
+verifyJWT = require('../auth/verify-token');
+
+Coloque-o antes de function, por exemplo:
+
+  /* GET users listing. */
+  router.get('/', verifyJWT, function (req, res, next) {
+    db.all('SELECT * FROM users', (err, users) => {
+      if (err) {
+        console.log("Usuários não foram encontrados", err)
+        return res.status(500).send({ error: "Usuário não encontrados" })
+      } else {
+        res.status(200).send(users)
+      }
+    })
+  });
+
+Ele irá bloquear o acesso por ser uma requisição sem token.
+
+{
+  "login": "Pedro",
+  "senha": "123"
+}
+
+Ele fez esse tratamento nas rotas de get e no Get single pet by id
