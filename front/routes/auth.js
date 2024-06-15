@@ -8,8 +8,9 @@ router.get('/', function (req, res, next) {
     res.render('layout', { body: 'pages/login', title: 'Express' });
 });
 
-router.post('/login', (req, res) => {
+router.post('/', (req, res) => {
     const { login, senha } = req.body
+    console.log('Login do Front', req.body)
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -27,7 +28,7 @@ router.post('/login', (req, res) => {
             res.redirect('/users')
         })
         .catch((error) => {
-            res.render('layout', { body: 'pages/login', title: 'Express', error })
+            res.render('layout', { body: 'pages/login', title: 'Express', error, cols: [], users: [] })
         })
 })
 

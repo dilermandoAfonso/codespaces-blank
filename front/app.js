@@ -4,9 +4,12 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
+var bodyParser = require('body-parser');
 
 var app = express();
 app.use(express.json());
+
+app.use(bodyParser.urlencoded({ extended: true }))
 
 //CONFIGURAÇÃO DE SESSAO
 app.use(session({

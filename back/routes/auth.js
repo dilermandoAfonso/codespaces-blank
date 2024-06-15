@@ -8,6 +8,7 @@ const db = new sqlite3.Database('./database/database.db')
 
 router.post('/login', (req, res) => {
     const { login, senha } = req.body
+    console.log('Login do Back', req.body)
     db.get('SELECT * FROM users WHERE login = ?', login, (err, row) => {
         if (!row) {
             console.log("Usuário não encontrado", err)

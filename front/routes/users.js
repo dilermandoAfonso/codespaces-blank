@@ -2,6 +2,29 @@ var express = require('express');
 var router = express.Router();
 const url = "https://special-telegram-v49jrjqj9r9fxx9q-4000.app.github.dev/users/"
 
+// /* GET users listing. */
+// router.get('/', function(req, res, next) { 
+
+//   fetch(url,{ method: 'GET'})
+//   .then(async (res) => {
+//     if(!res.ok){
+//       const err = await res.json()
+//       throw err
+//     }
+//     return res.json()
+//   })
+//   .then((users) => {
+//     let usersList = 
+//     let title = "Gestão de Usuários"
+//     let cols = ["Id","Login", "Senha", "Email", "Tipo", "Ações"]
+//     res.render('layout', {body: 'pages/users', title, users, cols, error:""});
+//   })
+//   .catch((error) => {
+//     console.log(error)
+//     res.render('layout', {body: 'pages/users', title: "Gestão de Usuários", error });
+//   })
+// });
+
 /* GET users listing. */
 router.get('/', function(req, res, next) { 
 
@@ -15,15 +38,21 @@ router.get('/', function(req, res, next) {
   })
   .then((users) => {
     let title = "Gestão de Usuários"
-    let cols = ["Id","Login", "Senha", "Email", "Tipo", "Ações"]
-    res.render('layout', {body: 'pages/users', title, users, cols, error:""});
+    let cols = ["Id","Login", "Email", "Tipo", "Ações"]  // Removida a coluna "Senha"
+
+    // Remover a senha de cada usuário
+    let filteredUsers = users.map(user => {
+      let { senha, ...rest } = user;
+      return rest;
+    });
+
+    res.render('layout', {body: 'pages/users', title, users: filteredUsers, cols, error:""});
   })
   .catch((error) => {
     console.log(error)
     res.render('layout', {body: 'pages/users', title: "Gestão de Usuários", error });
   })
 });
-
 
 //POST para novo usuário
 router.post("/",(req, res) => {
@@ -113,9 +142,6 @@ router.get("/:id",(req, res) => {
     res.status(500).send(error);
   })
 })
-
-
-
 
 
 module.exports = router;
