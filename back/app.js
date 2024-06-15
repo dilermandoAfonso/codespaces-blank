@@ -13,21 +13,18 @@ app.use(express.json());
  
 //CONFIGURAÇÃO DE LIMITES DE REQUISIÇÕES
 const limiter = rateLimit({
-  windowsMs: 15 * 60 * 1000,
-  max: 100 
+  windowsMs: 1 * 60 * 1000,
+  max: 3,
+  keyGenerator: (req, res) => req.headers['x-forwarded-for'] || req.ip
 });
 
-app.use('/login', limiter);
-
-session_config = session({
+//CONFIGURAÇÃO DE SESSAO
+app.use(session({
   secret: '881fca48c92a98295aaaeee18c6f1425d00f59298f0b085a01c51cb2329d4cb2',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false }
-})
-
-//CONFIGURAÇÃO DE SESSAO
-app.use(session_config);
+}))
 
 //IMPORT DAS ROTAS /ROUTES...
 var indexRouter = require('./routes/index');
@@ -39,7 +36,8 @@ const { error } = require('console');
 //DEFINE OS ENDPOINTS PARA AS ROTAS
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/auth', authRouter);
+app.use('/auth', limiter, authRouter);
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
